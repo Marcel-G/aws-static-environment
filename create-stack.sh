@@ -1,4 +1,5 @@
 #!/bin/bash
+templateDir="${0%/*}"
 
 # Test to make sure variables are defined
 : "${1:? domainName not set. create-stack <domainName> <environment> <?stackName>}"
@@ -18,6 +19,7 @@ fi
 stackName="$projectName-$2"
 fullDomain="$2.$1"
 
+
 read -p "Creating stack with the following details:
 Stack name: $stackName
 Domain: $fullDomain
@@ -30,7 +32,7 @@ then
         aws cloudformation create-stack \
             --stack-name $stackName \
             --capabilities CAPABILITY_NAMED_IAM \
-            --template-body file://aws/resources-cloudformation.yml \
+            --template-body file://$templateDir/resources-cloudformation.yml \
             --parameters \
                 ParameterKey=RootDomainName,ParameterValue=$1 \
                 ParameterKey=EnvironmentName,ParameterValue=$2 ;
