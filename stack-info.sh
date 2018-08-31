@@ -18,9 +18,3 @@ aws cloudformation describe-stacks \
     --stack-name "$projectName-$1" \
     --query 'Stacks[0].Outputs' \
     --output json;
-
-echo "This is the endpoint for contentful webhook: ([endpoint]/exportAll)"
-aws cloudformation describe-stacks \
-    --stack-name "$projectName-deploy-$1" \
-    --query 'Stacks[0].Outputs[?OutputKey==`ServiceEndpoint`].OutputValue' \
-    --output text;
