@@ -15,7 +15,7 @@ Using CloudFormation, the following resources are created for the stack:
 # How to use
 
 ## Prerequisite
-  - Configure [AWS CLI](https://aws.amazon.com/cli) (Should already be done from following Serverless install guide)
+  - Configure [AWS CLI](https://aws.amazon.com/cli)
 
 ## Running with npm
 
