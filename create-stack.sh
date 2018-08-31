@@ -1,5 +1,5 @@
 #!/bin/bash
-templateDir="${0%/*}"
+rootDir="${0%/*}"
 
 # Test to make sure variables are defined
 : "${1:? domainName not set. create-stack <domainName> <environment> <?stackName>}"
@@ -32,7 +32,7 @@ then
         aws cloudformation create-stack \
             --stack-name $stackName \
             --capabilities CAPABILITY_NAMED_IAM \
-            --template-body file://$templateDir/resources-cloudformation.yml \
+            --template-body file://$rootDir/resources-cloudformation.yml \
             --parameters \
                 ParameterKey=RootDomainName,ParameterValue=$1 \
                 ParameterKey=EnvironmentName,ParameterValue=$2 ;
@@ -41,7 +41,7 @@ then
         echo "Creating stack... (this can take several minutes)"
         aws cloudformation wait stack-create-complete --stack-name $stackName
         echo "Stack creation complete."
-        sh ./aws/stack-info.sh $2
+        sh $rootDir/stack-info.sh $2
     else 
         echo "Could not create stack"
     fi
