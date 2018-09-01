@@ -86,7 +86,7 @@ Resources:
       BucketName: !Join [ '', [!Ref EnvironmentName, '.', !Ref RootDomainName]]
       WebsiteConfiguration:
         IndexDocument: index.html
-        ErrorDocument: index.html
+        ErrorDocument: error.html
   RedirectBucket:
     Type: AWS::S3::Bucket
     Condition: isProduction
