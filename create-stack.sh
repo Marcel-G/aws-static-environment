@@ -41,7 +41,7 @@ then
         echo "Creating stack... (this can take several minutes)"
         aws cloudformation wait stack-create-complete --stack-name $stackName
         echo "Stack creation complete."
-        sh $rootDir/stack-info.sh $2
+        sh $rootDir/stack-info.sh $2 $projectName
     else 
         echo "Could not create stack"
     fi

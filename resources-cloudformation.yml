@@ -1,19 +1,27 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Description: Stack for hosting static files behind CDN
 Parameters:
   RootDomainName:
     Description: Domain name for your website (example.com)
     Type: String
+    AllowedPattern: '(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)'
+    ConstraintDescription : Must be a valid domain name.
   EnvironmentName:
     Description: Name of environment to create
     Type: String
+    AllowedPattern: '[a-zA-Z][-a-zA-Z0-9]*'
+    ConstraintDescription : Should be a single word containing only letters and numbers.
+Conditions: 
+  isProduction: !Equals [ !Ref EnvironmentName, production ]
 Resources:
   WebsiteCDN:
-    Type: 'AWS::CloudFront::Distribution'
+    Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig: 
         Comment: CDN for S3-backed website
         Aliases:
           - !Join [ '.', [!Ref EnvironmentName, !Ref RootDomainName]]
+          - !If [isProduction, !Ref RootDomainName, !Ref 'AWS::NoValue']
         Origins:
           - DomainName: !Select [1, !Split [ 'http://', !GetAtt [RootBucket, WebsiteURL] ]]
             Id: RootS3Origin
@@ -44,11 +52,12 @@ Resources:
       - LogBucket
   RedirectDistribution:
     Type: 'AWS::CloudFront::Distribution'
+    Condition: isProduction
     Properties:
       DistributionConfig: 
         Comment: Distribution to redirect to root domain
         Aliases:
-          - !Join ['', ['*.', !Ref EnvironmentName, '.' ,!Ref 'RootDomainName']]
+          - !Join ['', ['*.', !Ref 'RootDomainName']]
         Origins:
           - DomainName: !Select [1, !Split [ 'http://', !GetAtt [RedirectBucket, WebsiteURL] ]]
             Id: RedirectS3Origin
@@ -72,7 +81,7 @@ Resources:
     DependsOn:
       - RedirectBucket
   RootBucket:
-    Type: 'AWS::S3::Bucket'
+    Type: AWS::S3::Bucket
     Properties:
       BucketName: !Join [ '', [!Ref EnvironmentName, '.', !Ref RootDomainName]]
       WebsiteConfiguration:
@@ -80,21 +89,22 @@ Resources:
         ErrorDocument: index.html
   RedirectBucket:
     Type: AWS::S3::Bucket
+    Condition: isProduction
     Properties:
-      BucketName: !Join ['', ['redirect.', !Ref EnvironmentName, '.', !Ref 'RootDomainName']]
+      BucketName: !Join ['', ['redirect.', !Ref 'RootDomainName']]
       AccessControl: BucketOwnerFullControl
       WebsiteConfiguration:
         RedirectAllRequestsTo:
-          HostName: !Ref RootBucket
+          HostName: !Ref RootDomainName
           Protocol: https
   LogBucket:
-    Type: 'AWS::S3::Bucket'
+    Type: AWS::S3::Bucket
     Properties:
       BucketName: !Join ['', ['logs.', !Ref EnvironmentName, '.', !Ref 'RootDomainName']]
     DependsOn:
       - RootBucket
   RootBucketPolicy:
-    Type: 'AWS::S3::BucketPolicy'
+    Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref RootBucket
       PolicyDocument:
@@ -121,7 +131,7 @@ Resources:
     DependsOn:
       - StackUser
   LogBucketPolicy:
-    Type: 'AWS::S3::BucketPolicy'
+    Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref LogBucket
       PolicyDocument:
@@ -149,7 +159,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSLambdaFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/CloudFrontFullAccess
-      UserName: !Join ['', [!Ref "AWS::StackName", '-stack-user']]
+      UserName: !Join ['', [!Ref 'AWS::StackName', '-stack-user']]
   DeploymentAccessKey:
     Type: AWS::IAM::AccessKey
     Properties:
